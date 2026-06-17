@@ -20,32 +20,48 @@ namespace Global_Logistics_Management_System_API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Client>>> GetClients()
         {
-            return await _context.Clients.ToListAsync();
+            var clients = await _context.Clients.ToListAsync();
+            return Ok(clients); // Explicitly returns HTTP 200 OK
         }
 
         // GET: api/ClientsApi/5
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetClientById")] // Named attribute ensures exact route resolution
         public async Task<ActionResult<Client>> GetClient(int id)
         {
             var client = await _context.Clients.FindAsync(id);
-            if (client == null) return NotFound();
-            return client;
+
+            if (client == null)
+            {
+                return NotFound(); // Explicitly returns HTTP 404 Not Found
+            }
+
+            return Ok(client); // Explicitly returns HTTP 200 OK
         }
 
         // POST: api/ClientsApi
         [HttpPost]
         public async Task<ActionResult<Client>> PostClient(Client client)
         {
+            if (client == null)
+            {
+                return BadRequest(); // Explicitly returns HTTP 400 Bad Request
+            }
+
             _context.Clients.Add(client);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetClient), new { id = client.ClientId }, client);
+
+            // Explicitly uses the named route segment to eliminate cross-project 404 context matching errors
+            return CreatedAtRoute("GetClientById", new { id = client.ClientId }, client); // Returns HTTP 201 Created
         }
 
         // PUT: api/ClientsApi/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutClient(int id, Client client)
         {
-            if (id != client.ClientId) return BadRequest();
+            if (client == null || id != client.ClientId)
+            {
+                return BadRequest(); // Explicitly returns HTTP 400 Bad Request
+            }
 
             _context.Entry(client).State = EntityState.Modified;
 
@@ -55,11 +71,14 @@ namespace Global_Logistics_Management_System_API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Clients.Any(e => e.ClientId == id)) return NotFound();
+                if (!_context.Clients.Any(e => e.ClientId == id))
+                {
+                    return NotFound(); // Explicitly returns HTTP 404 Not Found
+                }
                 throw;
             }
 
-            return NoContent();
+            return NoContent(); // Explicitly returns HTTP 204 No Content
         }
 
         // DELETE: api/ClientsApi/5
@@ -67,11 +86,15 @@ namespace Global_Logistics_Management_System_API.Controllers
         public async Task<IActionResult> DeleteClient(int id)
         {
             var client = await _context.Clients.FindAsync(id);
-            if (client == null) return NotFound();
+            if (client == null)
+            {
+                return NotFound(); // Explicitly returns HTTP 404 Not Found
+            }
 
             _context.Clients.Remove(client);
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            return NoContent(); // Explicitly returns HTTP 204 No Content
         }
     }
 }

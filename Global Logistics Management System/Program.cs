@@ -1,26 +1,28 @@
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Point the BaseAddress to the root of the backend container service directly
-var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5001/api/";
+// Direct native address connection to your running Kestrel API on port 7230
+string clientRootUrl = "https://localhost:7230/";
 
-// Fallback safety: If it contains '/api/', trim it for the HttpClient root assignment
-// so that relative paths like "api/ClientsApi" resolve perfectly.
-var clientRootUrl = apiBaseUrl.EndsWith("/api/")
-    ? apiBaseUrl.Replace("/api/", "/")
-    : apiBaseUrl;
+// Create a handler that bypasses SSL certificate validation errors for local testing
+var bypassSslHandler = new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+};
 
-// 2. Configure the Named and Default HttpClients to use the root service address
+// 1. Configure the DEFAULT HttpClient used by your standard MVC Controllers
 builder.Services.AddHttpClient(string.Empty, client =>
 {
     client.BaseAddress = new Uri(clientRootUrl);
-});
+}).ConfigurePrimaryHttpMessageHandler(() => bypassSslHandler);
 
+// 2. Configure your typed CurrencyService HttpClient
 builder.Services.AddHttpClient<Global_Logistics_Management_System.Services.CurrencyService>(client =>
 {
     client.BaseAddress = new Uri(clientRootUrl);
-});
+}).ConfigurePrimaryHttpMessageHandler(() => bypassSslHandler);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
