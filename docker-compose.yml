@@ -18,13 +18,14 @@ services:
   # ----------------------------------------------------
   web-api-backend:
     image: web-api-backend
-    container_name: web-api-backend
     build:
       context: .
       dockerfile: Global Logistics Management System API/Dockerfile
+      args:
+        - DOTNET_GENERATE_ASPNET_CERTIFICATE=false
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sql-server-db;Database=GLMS_Database;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+      - ASPNETCORE_HOSTINGSTARTUPASSETS=false
     ports:
       - "5001:8080"
     depends_on:

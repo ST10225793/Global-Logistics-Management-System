@@ -1,15 +1,29 @@
-
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpClient();
+// 1. Point the BaseAddress to the root of the backend container service directly
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5001/api/";
+
+// Fallback safety: If it contains '/api/', trim it for the HttpClient root assignment
+// so that relative paths like "api/ClientsApi" resolve perfectly.
+var clientRootUrl = apiBaseUrl.EndsWith("/api/")
+    ? apiBaseUrl.Replace("/api/", "/")
+    : apiBaseUrl;
+
+// 2. Configure the Named and Default HttpClients to use the root service address
+builder.Services.AddHttpClient(string.Empty, client =>
+{
+    client.BaseAddress = new Uri(clientRootUrl);
+});
+
+builder.Services.AddHttpClient<Global_Logistics_Management_System.Services.CurrencyService>(client =>
+{
+    client.BaseAddress = new Uri(clientRootUrl);
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
-// Register HttpClient and the CurrencyService for Dependency Injection
-builder.Services.AddHttpClient<Global_Logistics_Management_System.Services.CurrencyService>();
 
 var app = builder.Build();
 
@@ -17,21 +31,16 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

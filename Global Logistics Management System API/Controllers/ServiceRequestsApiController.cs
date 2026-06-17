@@ -20,15 +20,24 @@ namespace Global_Logistics_Management_System_API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ServiceRequest>>> GetServiceRequests()
         {
-            return await _context.ServiceRequests.Include(s => s.Contract).ToListAsync();
+            return await _context.ServiceRequests
+                .Include(s => s.Contract)
+                .ToListAsync();
         }
 
         // GET: api/ServiceRequestsApi/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceRequest>> GetServiceRequest(int id)
         {
-            var serviceRequest = await _context.ServiceRequests.Include(s => s.Contract).FirstOrDefaultAsync(s => s.RequestId == id);
-            if (serviceRequest == null) return NotFound();
+            var serviceRequest = await _context.ServiceRequests
+                .Include(s => s.Contract)
+                .FirstOrDefaultAsync(s => s.RequestId == id);
+
+            if (serviceRequest == null)
+            {
+                return NotFound();
+            }
+
             return serviceRequest;
         }
 
@@ -36,8 +45,15 @@ namespace Global_Logistics_Management_System_API.Controllers
         [HttpPost]
         public async Task<ActionResult<ServiceRequest>> PostServiceRequest(ServiceRequest serviceRequest)
         {
+            // Set navigation property to null to prevent EF Core from trying to recreate an existing Contract
+            if (serviceRequest.Contract != null)
+            {
+                _context.Entry(serviceRequest.Contract).State = EntityState.Unchanged;
+            }
+
             _context.ServiceRequests.Add(serviceRequest);
             await _context.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetServiceRequest), new { id = serviceRequest.RequestId }, serviceRequest);
         }
 
@@ -45,9 +61,19 @@ namespace Global_Logistics_Management_System_API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutServiceRequest(int id, ServiceRequest serviceRequest)
         {
-            if (id != serviceRequest.RequestId) return BadRequest();
+            if (id != serviceRequest.RequestId)
+            {
+                return BadRequest("Mismatched Request ID path parameter.");
+            }
 
+            // Ensure the main entity state is flagged modified
             _context.Entry(serviceRequest).State = EntityState.Modified;
+
+            // Prevent EF Core from trying to update or alter the parent Contract structure inside this endpoint
+            if (serviceRequest.Contract != null)
+            {
+                _context.Entry(serviceRequest.Contract).State = EntityState.Unchanged;
+            }
 
             try
             {
@@ -55,7 +81,10 @@ namespace Global_Logistics_Management_System_API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.ServiceRequests.Any(e => e.RequestId == id)) return NotFound();
+                if (!_context.ServiceRequests.Any(e => e.RequestId == id))
+                {
+                    return NotFound();
+                }
                 throw;
             }
 
@@ -67,10 +96,14 @@ namespace Global_Logistics_Management_System_API.Controllers
         public async Task<IActionResult> DeleteServiceRequest(int id)
         {
             var serviceRequest = await _context.ServiceRequests.FindAsync(id);
-            if (serviceRequest == null) return NotFound();
+            if (serviceRequest == null)
+            {
+                return NotFound();
+            }
 
             _context.ServiceRequests.Remove(serviceRequest);
             await _context.SaveChangesAsync();
+
             return NoContent();
         }
     }

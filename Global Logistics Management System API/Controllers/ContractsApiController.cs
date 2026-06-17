@@ -69,9 +69,15 @@ namespace Global_Logistics_Management_System_API.Controllers
             var contract = await _context.Contracts.FindAsync(id);
             if (contract == null) return NotFound();
 
-            contract.Status = newStatus;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            // Explicitly map string values safely to the application's underlying enum structure
+            if (Enum.TryParse<Global_Logistics_Management_System.Models.ContractStatus>(newStatus, true, out var parsedStatus))
+            {
+                contract.Status = parsedStatus;
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+
+            return BadRequest("Invalid status string value provided.");
         }
 
         // DELETE: api/ContractsApi/5
