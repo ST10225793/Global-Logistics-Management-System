@@ -1,0 +1,32 @@
+name: .NET CI Pipeline Validation
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK Environment
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    # The block pipe (|) tells Bash to look directly at the root file without adding extra folders
+    - name: Restore Application Dependencies
+      run: |
+        dotnet restore "Global Logistics Management System.csproj"
+
+    - name: Build Application Project
+      run: |
+        dotnet build "Global Logistics Management System.csproj" --configuration Release --no-restore

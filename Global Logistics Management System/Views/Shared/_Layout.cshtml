@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Global Logistics Management System</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Global_Logistics_Management_System.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #212529;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* Match the precise burgundy link design from your navbar template */
+        .navbar-light .navbar-brand,
+        .navbar-light .navbar-nav .nav-link {
+            color: #880e4f !important;
+            font-size: 1.25rem;
+            font-weight: 500;
+            padding-right: 1.5rem !important;
+            padding-left: 0 !important;
+        }
+
+        .navbar-light .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .navbar-light .navbar-nav .nav-link:hover {
+            color: #f06292 !important;
+        }
+
+        .hello-kitty-float {
+            max-width: 120px;
+            margin: 0 auto;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @@keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Specific Color Mapping Tokens */
+        .text-pink-theme {
+            color: #880e4f !important;
+        }
+
+        .border-pink {
+            border-color: #fce4ec !important;
+        }
+
+        /* Dashboard Stat Card Structure Styling */
+        .stat-card {
+            border: 1px solid rgba(0,0,0,.125);
+            border-radius: 0.25rem;
+            background-color: #fff;
+            transition: transform 0.2s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+            }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: #f06292;
+        }
+
+        /* Custom Button Theme Colors */
+        .btn-pink {
+            background-color: #f06292 !important;
+            color: white !important;
+            border-color: #f06292 !important;
+        }
+
+            .btn-pink:hover {
+                background-color: #ec407a !important;
+                border-color: #ec407a !important;
+            }
+
+        /* Dynamic Table Header Color Rules */
+        .table th {
+            color: #f06292 !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Global Logistics Management System</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Clients" asp-action="Index">Clients Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Contracts" asp-action="Index">Manage Contracts</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="ServiceRequests" asp-action="Index">Service Requests</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - Global_Logistics_Management_System - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. Controller Restrictive Notification Trap
+            @if (TempData["ToastError"] != null)
+            {
+                    <text>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Action Restricted 🎀',
+                        html: '@TempData["ToastError"]',
+                        background: '#fffafb',
+                        color: '#880e4f',
+                        confirmButtonColor: '#f06292'
+                    });
+                    </text>
+            }
+
+            // 2. Automated Validation Status Tracking
+            const hasFieldErrors = document.querySelector(".field-validation-error");
+            const hasSummaryErrors = document.querySelector(".validation-summary-errors ul li");
+
+            if (hasFieldErrors || hasSummaryErrors) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Something is missing! ✨',
+                    text: 'Please check the highlighted fields. Every detail matters for a magical event!',
+                    background: '#fffafb',
+                    color: '#880e4f',
+                    confirmButtonColor: '#f06292'
+                });
+            }
+        });
+    </script>
+</body>
+</html>
