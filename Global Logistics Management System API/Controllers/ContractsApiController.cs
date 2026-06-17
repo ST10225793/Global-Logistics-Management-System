@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Global_Logistics_Management_System.Data;
 using Global_Logistics_Management_System.Models;
 
-namespace Global_Logistics_Management_System.API.Controllers
+namespace Global_Logistics_Management_System_API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class ContractsApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -16,54 +16,73 @@ namespace Global_Logistics_Management_System.API.Controllers
             _context = context;
         }
 
-        // GET: api/ContractsApi?status=Approved
+        // GET: api/ContractsApi
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Contract>>> GetContracts([FromQuery] string? status)
+        public async Task<ActionResult<IEnumerable<Contract>>> GetContracts()
         {
-            var query = _context.Contracts.Include(c => c.Client).AsQueryable();
+            return await _context.Contracts.Include(c => c.Client).ToListAsync();
+        }
 
-            // Convert string query parameters safely to your exact enum type
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<ContractStatus>(status, true, out var parsedStatus))
-            {
-                query = query.Where(c => c.Status == parsedStatus);
-            }
-
-            return await query.ToListAsync();
+        // GET: api/ContractsApi/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Contract>> GetContract(int id)
+        {
+            var contract = await _context.Contracts.Include(c => c.Client).FirstOrDefaultAsync(c => c.ContractId == id);
+            if (contract == null) return NotFound();
+            return contract;
         }
 
         // POST: api/ContractsApi
         [HttpPost]
-        public async Task<ActionResult<Contract>> CreateContract(Contract contract)
+        public async Task<ActionResult<Contract>> PostContract(Contract contract)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
             _context.Contracts.Add(contract);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetContracts), new { id = contract.ContractId }, contract);
+            return CreatedAtAction(nameof(GetContract), new { id = contract.ContractId }, contract);
         }
 
-        // PATCH: api/ContractsApi/{id}/status
+        // PUT: api/ContractsApi/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutContract(int id, Contract contract)
+        {
+            if (id != contract.ContractId) return BadRequest();
+
+            _context.Entry(contract).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Contracts.Any(e => e.ContractId == id)) return NotFound();
+                throw;
+            }
+
+            return NoContent();
+        }
+
+        // PATCH: api/ContractsApi/5/status
         [HttpPatch("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
+        public async Task<IActionResult> PatchStatus(int id, [FromBody] string newStatus)
         {
             var contract = await _context.Contracts.FindAsync(id);
-            if (contract == null)
-            {
-                return NotFound($"Contract with ID {id} not found.");
-            }
+            if (contract == null) return NotFound();
 
-            // Convert incoming text body payload safely into your matching model enum
-            if (!Enum.TryParse<ContractStatus>(newStatus, true, out var parsedStatus))
-            {
-                return BadRequest($"Invalid status value provided. Allowed choices include: {string.Join(", ", Enum.GetNames(typeof(ContractStatus)))}");
-            }
-
-            contract.Status = parsedStatus;
-
-            _context.Entry(contract).Property(x => x.Status).IsModified = true;
+            contract.Status = newStatus;
             await _context.SaveChangesAsync();
+            return NoContent();
+        }
 
+        // DELETE: api/ContractsApi/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteContract(int id)
+        {
+            var contract = await _context.Contracts.FindAsync(id);
+            if (contract == null) return NotFound();
+
+            _context.Contracts.Remove(contract);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

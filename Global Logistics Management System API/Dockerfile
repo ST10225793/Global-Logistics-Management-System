@@ -17,7 +17,7 @@ WORKDIR "/src/Global Logistics Management System API"
 RUN dotnet build "Global Logistics Management System API.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Global Logistics Management System API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Global Logistics Management System API.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:ErrorOnDuplicatePublishOutputFiles=false
 
 FROM base AS final
 WORKDIR /app
